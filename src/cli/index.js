@@ -1159,7 +1159,7 @@ workflowCmd
         { type: 'input', name: 'name', message: 'Workflow name:' },
         { type: 'input', name: 'description', message: 'Description (optional):' },
         {
-          type: 'list',
+          type: 'select',
           name: 'triggerType',
           message: 'Trigger type:',
           choices: ['manual', 'schedule', 'webhook'],
@@ -2384,7 +2384,7 @@ personaCmd
     // Interactive mode if options not provided
     if (!preset) {
       const presetAnswer = await inquirer.prompt([{
-        type: 'list',
+        type: 'select',
         name: 'preset',
         message: '🎯 Choose your niche:',
         choices: Object.entries(NICHE_PRESETS).map(([key, val]) => ({
@@ -2407,7 +2407,7 @@ personaCmd
 
     if (!strategy) {
       const stratAnswer = await inquirer.prompt([{
-        type: 'list',
+        type: 'select',
         name: 'strategy',
         message: '📈 Growth strategy:',
         choices: Object.entries(ENGAGEMENT_STRATEGIES).map(([key, val]) => ({
@@ -2420,7 +2420,7 @@ personaCmd
 
     if (!activityPattern) {
       const actAnswer = await inquirer.prompt([{
-        type: 'list',
+        type: 'select',
         name: 'activity',
         message: '🕐 Activity pattern:',
         choices: Object.entries(ACTIVITY_PATTERNS).map(([key, val]) => ({
@@ -2977,7 +2977,7 @@ notifyCmd.command('configure').description('Configure notification channels inte
   try {
     const { getNotifier } = await import('../notifications/notifier.js');
     const notifier = await getNotifier();
-    const { channel } = await inquirer.prompt([{ type: 'list', name: 'channel', message: 'Configure which channel?', choices: ['slack', 'discord', 'telegram', 'email'] }]);
+    const { channel } = await inquirer.prompt([{ type: 'select', name: 'channel', message: 'Configure which channel?', choices: ['slack', 'discord', 'telegram', 'email'] }]);
     if (channel === 'slack' || channel === 'discord') {
       const { webhookUrl } = await inquirer.prompt([{ type: 'input', name: 'webhookUrl', message: `${channel} webhook URL:` }]);
       notifier.configure({ [channel]: { enabled: true, webhookUrl } });
