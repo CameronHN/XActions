@@ -46,18 +46,25 @@ const PAGE_COUNT = 20;
 export function parseUserEntry(rawUser) {
   if (!rawUser || rawUser.__typename === 'UserUnavailable') return null;
 
+  // x.com moved these fields out of `legacy` into typed sub-objects (core,
+  // avatar, relationship_counts, privacy, profile_bio). Reading only `legacy`
+  // dropped the username of every user served in the new shape, and with it
+  // the user, from follower, following, liker and notification lists.
   const legacy = rawUser.legacy ?? {};
+  const core = rawUser.core ?? {};
+  const counts = rawUser.relationship_counts ?? {};
+  const avatar = rawUser.avatar?.image_url ?? legacy.profile_image_url_https ?? '';
 
   return {
     id: rawUser.rest_id ?? null,
-    username: legacy.screen_name ?? null,
-    name: legacy.name ?? null,
-    bio: legacy.description ?? null,
-    verified: rawUser.is_blue_verified ?? legacy.verified ?? false,
-    avatar: (legacy.profile_image_url_https ?? '').replace('_normal', '_400x400') || null,
-    followersCount: legacy.followers_count ?? 0,
-    followingCount: legacy.friends_count ?? 0,
-    protected: legacy.protected ?? false,
+    username: core.screen_name ?? legacy.screen_name ?? null,
+    name: core.name ?? legacy.name ?? null,
+    bio: rawUser.profile_bio?.description ?? legacy.description ?? null,
+    verified: Boolean(rawUser.is_blue_verified ?? rawUser.verification?.verified ?? legacy.verified ?? false),
+    avatar: avatar.replace('_normal', '_400x400') || null,
+    followersCount: counts.followers ?? legacy.followers_count ?? 0,
+    followingCount: counts.following ?? legacy.friends_count ?? 0,
+    protected: Boolean(rawUser.privacy?.protected ?? legacy.protected ?? false),
     platform: 'twitter',
   };
 }

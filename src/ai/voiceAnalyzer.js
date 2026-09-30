@@ -13,7 +13,8 @@
 // Stop Words (filtered from vocabulary analysis)
 // ============================================================================
 
-const STOP_WORDS = new Set([
+/** Common English words that carry no topic, shared by the text analyzers. */
+export const STOP_WORDS = new Set([
   'the', 'be', 'to', 'of', 'and', 'a', 'in', 'that', 'have', 'i',
   'it', 'for', 'not', 'on', 'with', 'he', 'as', 'you', 'do', 'at',
   'this', 'but', 'his', 'by', 'from', 'they', 'we', 'say', 'her', 'she',

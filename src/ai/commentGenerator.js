@@ -304,8 +304,13 @@ export async function chatCompletion(target, messages, opts = {}) {
         throw lastError;
       }
       if (!res.ok) {
+        // A 4xx (bad key, unknown model, bad request) fails the same way on
+        // every attempt, so it is thrown past the retry below.
         const detail = await res.text().catch(() => '');
-        throw new Error(`${target.provider} error ${res.status}: ${detail.slice(0, 300)}`);
+        const err = new Error(`${target.provider} error ${res.status}: ${detail.slice(0, 300)}`);
+        err.retryable = false;
+        err.status = res.status;
+        throw err;
       }
       const data = await res.json();
       const text = target.provider === 'anthropic'
@@ -314,7 +319,7 @@ export async function chatCompletion(target, messages, opts = {}) {
       return { text, model: data.model || target.model, usage: data.usage || {} };
     } catch (err) {
       lastError = err;
-      if (attempt >= retries) throw err;
+      if (err.retryable === false || attempt >= retries) throw err;
       await new Promise((r) => setTimeout(r, 800 * 2 ** attempt));
     }
   }

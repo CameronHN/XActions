@@ -145,6 +145,32 @@ function createMockClient({ authenticated = true, graphqlResponses = [] } = {}) 
 // ---------------------------------------------------------------------------
 
 describe('parseUserEntry', () => {
+  it('reads the typed user shape x.com now serves, with no legacy screen_name', () => {
+    const user = parseUserEntry({
+      __typename: 'User',
+      rest_id: '77',
+      is_blue_verified: true,
+      core: { screen_name: 'typed', name: 'Typed User' },
+      avatar: { image_url: 'https://pbs.twimg.com/profile_images/1/a_normal.jpg' },
+      profile_bio: { description: 'bio here' },
+      relationship_counts: { followers: 12, following: 3 },
+      privacy: { protected: true },
+      legacy: {},
+    });
+    expect(user).toEqual({
+      id: '77',
+      username: 'typed',
+      name: 'Typed User',
+      bio: 'bio here',
+      verified: true,
+      avatar: 'https://pbs.twimg.com/profile_images/1/a_400x400.jpg',
+      followersCount: 12,
+      followingCount: 3,
+      protected: true,
+      platform: 'twitter',
+    });
+  });
+
   it('parses a standard user result into XActions format', () => {
     const raw = buildRawUser({
       username: 'nichxbt',

@@ -72,6 +72,16 @@ describe('postTweet', () => {
     client = createMockClient();
   });
 
+  it('throws X\'s in-body refusal instead of returning it as the post', async () => {
+    const refused = createMockClient({
+      graphqlResult: { errors: [{ code: 187, message: 'Status is a duplicate.' }], data: {} },
+    });
+    const error = await postTweet(refused, 'again').catch((e) => e);
+    expect(error).toBeInstanceOf(TwitterApiError);
+    expect(error.message).toBe('X did not create the post: Status is a duplicate. (code 187)');
+    expect(error.data.errors[0].code).toBe(187);
+  });
+
   it('should construct correct POST body for a simple tweet', async () => {
     await postTweet(client, 'Hello world');
 

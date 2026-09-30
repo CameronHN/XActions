@@ -86,6 +86,32 @@ function toItem(entity, { username, userId, createdAt, num, kind = 'media' }) {
   };
 }
 
+/**
+ * One media entry in the shape toItem reads, from any of the three shapes a
+ * tweet can carry: already normalised by parseMediaEntity, raw GraphQL
+ * (`media_url_https`, `video_info`), or parseTweetData's own
+ * (`{ type, url, videoUrl }`). The last one used to be re-parsed as raw
+ * GraphQL, found no `media_url_https`, and was dropped, so downloading a
+ * tweet, a search or a profile's posts saved nothing.
+ */
+function mediaEntityOf(entry, tweetId) {
+  if (!entry) return null;
+  if (entry.mediaType) return entry;
+  if (entry.media_url_https || entry.media_url || entry.video_info) return parseMediaEntity(entry, tweetId);
+  const type = entry.type || 'photo';
+  const isVideo = type === 'video' || type === 'animated_gif';
+  let url = isVideo ? entry.videoUrl || null : entry.url || null;
+  if (type === 'photo' && url && !url.includes('?format=')) url = `${originalImageUrl(url)}?format=jpg&name=orig`;
+  return {
+    tweetId,
+    mediaType: type,
+    url,
+    width: entry.width ?? 0,
+    height: entry.height ?? 0,
+    altText: entry.altText ?? null,
+  };
+}
+
 /** Pull every media item out of one parsed tweet. */
 export function itemsFromTweet(tweet) {
   const media =
@@ -101,9 +127,7 @@ export function itemsFromTweet(tweet) {
 
   return media
     .map((entry, index) => {
-      // Entries already normalised by parseMediaEntity keep their shape;
-      // raw GraphQL entities are parsed here.
-      const entity = entry.mediaType ? entry : parseMediaEntity(entry, tweetId);
+      const entity = mediaEntityOf(entry, tweetId);
       if (!entity?.url) return null;
       return toItem(entity, { username, userId, createdAt, num: index + 1 });
     })

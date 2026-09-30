@@ -112,6 +112,21 @@ describe('media targets', () => {
     expect(applyFilters(items, { until: new Date('2026-05-01') })).toHaveLength(1);
   });
 
+  it('reads the media of a tweet as parseTweetData returns it', () => {
+    const items = itemsFromTweet({
+      id: '1000',
+      author: { id: '7', username: 'nichxbt' },
+      createdAt: '2026-08-28T00:00:00Z',
+      media: [
+        { type: 'photo', url: 'https://pbs.twimg.com/media/p.jpg', width: 1200, height: 800, videoUrl: null },
+        { type: 'video', url: 'https://pbs.twimg.com/thumb.jpg', width: 720, height: 1280, videoUrl: 'https://video.twimg.com/v/720x1280/v.mp4' },
+      ],
+    });
+    expect(items).toHaveLength(2);
+    expect(items[0]).toMatchObject({ mediaType: 'photo', url: 'https://pbs.twimg.com/media/p.jpg?format=jpg&name=orig', tweetId: '1000', username: 'nichxbt', num: 1 });
+    expect(items[1]).toMatchObject({ mediaType: 'video', url: 'https://video.twimg.com/v/720x1280/v.mp4', num: 2 });
+  });
+
   it('numbers the media inside one tweet so four photos do not overwrite each other', () => {
     const items = itemsFromTweet({
       id: '999',
