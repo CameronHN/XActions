@@ -674,7 +674,7 @@ export class Scraper {
    * Get DM conversations.
    *
    * @param {number} [count=50] - Maximum conversations to return
-   * @returns {AsyncGenerator<{id: string, type: string, participants: string[], lastMessage: string, updatedAt: string}>}
+   * @returns {AsyncGenerator<import('./api/dms.js').DmConversation>}
    */
   async *getDmConversations(count = 50) {
     this._requireAuth();

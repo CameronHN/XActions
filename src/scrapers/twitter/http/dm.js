@@ -15,6 +15,7 @@
  */
 
 import { GRAPHQL, REST, REST_BASE } from './endpoints.js';
+import { parseGroupMetadata, parseParticipants } from '../../../client/api/dmConversation.js';
 import {
   AuthError,
   NotFoundError,
@@ -153,9 +154,7 @@ function parseInboxState(inboxState, options = {}) {
     if (result.length >= limit) break;
 
     // Participants
-    const participantIds = (conv.participants ?? []).map(
-      (p) => p.user_id || p,
-    );
+    const participantIds = parseParticipants(conv.participants);
     const participants = participantIds.map((uid) => {
       const u = users[uid] ?? {};
       return {
@@ -188,6 +187,7 @@ function parseInboxState(inboxState, options = {}) {
       },
       unreadCount: Number(conv.unread_count ?? 0),
       type: conv.type === 'GROUP_DM' ? 'group' : 'one_to_one',
+      ...parseGroupMetadata(conv),
     });
   }
 
