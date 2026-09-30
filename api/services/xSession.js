@@ -165,3 +165,18 @@ export async function listDmGroups(scraper, limit) {
   }
   return groups;
 }
+
+/**
+ * The bare auth_token of a user's saved session, decrypted, or undefined when
+ * none is saved. For engines that take a token rather than a client.
+ *
+ * @param {string|undefined} userId
+ * @returns {Promise<string|undefined>}
+ */
+export async function authTokenForUser(userId) {
+  if (!userId) return undefined;
+  const stored = await getDecryptedSessionCookie(userId);
+  if (!stored) return undefined;
+  const { authTokenOf } = await import('./processors/context.js');
+  return authTokenOf(stored) || undefined;
+}

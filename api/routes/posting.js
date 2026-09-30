@@ -34,7 +34,7 @@ router.post('/tweet', async (req, res) => {
       operationId: operation.id,
       userId: req.user.id,
       authMethod: req.user.authMethod || 'oauth',
-      config: { text, replyTo, quoteTweetId, sessionCookie: req.user.sessionCookie },
+      config: { text, replyTo, quoteTweetId },
     });
 
     res.json({ operationId: operation.id, status: 'queued', message: 'Tweet queued' });
@@ -70,7 +70,7 @@ router.post('/thread', async (req, res) => {
       operationId: operation.id,
       userId: req.user.id,
       authMethod: req.user.authMethod || 'oauth',
-      config: { tweets, sessionCookie: req.user.sessionCookie },
+      config: { tweets },
     });
 
     res.json({ operationId: operation.id, status: 'queued', message: 'Thread queued' });
@@ -107,7 +107,7 @@ router.post('/poll', async (req, res) => {
       operationId: operation.id,
       userId: req.user.id,
       authMethod: req.user.authMethod || 'oauth',
-      config: { question, options, durationMinutes, sessionCookie: req.user.sessionCookie },
+      config: { question, options, durationMinutes },
     });
 
     res.json({ operationId: operation.id, status: 'queued', message: 'Poll queued' });
@@ -147,7 +147,7 @@ router.post('/schedule', async (req, res) => {
       operationId: operation.id,
       userId: req.user.id,
       authMethod: req.user.authMethod || 'oauth',
-      config: { text, scheduledAt, sessionCookie: req.user.sessionCookie },
+      config: { text, scheduledAt },
     });
 
     res.json({ operationId: operation.id, status: 'queued', message: 'Scheduled post queued' });
@@ -180,7 +180,7 @@ router.delete('/tweet/:tweetId', async (req, res) => {
       operationId: operation.id,
       userId: req.user.id,
       authMethod: req.user.authMethod || 'oauth',
-      config: { tweetId, sessionCookie: req.user.sessionCookie },
+      config: { tweetId },
     });
 
     res.json({ operationId: operation.id, status: 'queued', message: 'Delete queued' });

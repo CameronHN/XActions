@@ -31,7 +31,7 @@ router.post('/like/:tweetId', async (req, res) => {
       operationId: operation.id,
       userId: req.user.id,
       authMethod: req.user.authMethod || 'oauth',
-      config: { tweetId, sessionCookie: req.user.sessionCookie },
+      config: { tweetId },
     });
 
     res.json({ operationId: operation.id, status: 'queued', message: 'Like queued' });
@@ -59,7 +59,7 @@ router.delete('/like/:tweetId', async (req, res) => {
       operationId: operation.id,
       userId: req.user.id,
       authMethod: req.user.authMethod || 'oauth',
-      config: { tweetId, sessionCookie: req.user.sessionCookie },
+      config: { tweetId },
     });
 
     res.json({ operationId: operation.id, status: 'queued', message: 'Unlike queued' });
@@ -94,7 +94,7 @@ router.post('/reply/:tweetId', async (req, res) => {
       operationId: operation.id,
       userId: req.user.id,
       authMethod: req.user.authMethod || 'oauth',
-      config: { tweetId, text, sessionCookie: req.user.sessionCookie },
+      config: { tweetId, text },
     });
 
     res.json({ operationId: operation.id, status: 'queued', message: 'Reply queued' });
@@ -122,7 +122,7 @@ router.post('/bookmark/:tweetId', async (req, res) => {
       operationId: operation.id,
       userId: req.user.id,
       authMethod: req.user.authMethod || 'oauth',
-      config: { tweetId, sessionCookie: req.user.sessionCookie },
+      config: { tweetId },
     });
 
     res.json({ operationId: operation.id, status: 'queued', message: 'Bookmark queued' });
@@ -158,7 +158,7 @@ router.post('/auto-like', async (req, res) => {
       operationId: operation.id,
       userId: req.user.id,
       authMethod: req.user.authMethod || 'oauth',
-      config: { keywords, maxLikes, delay, sessionCookie: req.user.sessionCookie },
+      config: { keywords, maxLikes, delay },
     });
 
     res.json({ operationId: operation.id, status: 'queued', message: 'Auto-like queued' });
@@ -186,7 +186,7 @@ router.get('/analytics', async (req, res) => {
       operationId: operation.id,
       userId: req.user.id,
       authMethod: req.user.authMethod || 'oauth',
-      config: { period, sessionCookie: req.user.sessionCookie },
+      config: { period },
     });
 
     res.json({ operationId: operation.id, status: 'queued', message: 'Analytics fetch queued' });

@@ -28,7 +28,7 @@ router.get('/analytics', async (req, res) => {
       operationId: operation.id,
       userId: req.user.id,
       authMethod: req.user.authMethod || 'oauth',
-      config: { period, sessionCookie: req.user.sessionCookie },
+      config: { period },
     });
 
     res.json({ operationId: operation.id, status: 'queued', message: 'Analytics fetch queued' });
@@ -55,7 +55,7 @@ router.get('/revenue', async (req, res) => {
       operationId: operation.id,
       userId: req.user.id,
       authMethod: req.user.authMethod || 'oauth',
-      config: { sessionCookie: req.user.sessionCookie },
+      config: {},
     });
 
     res.json({ operationId: operation.id, status: 'queued', message: 'Revenue fetch queued' });
@@ -84,7 +84,7 @@ router.get('/subscribers', async (req, res) => {
       operationId: operation.id,
       userId: req.user.id,
       authMethod: req.user.authMethod || 'oauth',
-      config: { limit: parseInt(limit), sessionCookie: req.user.sessionCookie },
+      config: { limit: parseInt(limit) },
     });
 
     res.json({ operationId: operation.id, status: 'queued', message: 'Subscribers fetch queued' });

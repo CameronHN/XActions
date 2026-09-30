@@ -20,6 +20,7 @@
 
 import express from 'express';
 import { authMiddleware } from '../middleware/auth.js';
+import { authTokenForUser } from '../services/xSession.js';
 import {
   createStream,
   stopStream,
@@ -70,7 +71,7 @@ router.post('/', async (req, res) => {
       type,
       username,
       interval: intervalMs,
-      authToken: req.body.authToken || req.user?.sessionCookie || undefined,
+      authToken: req.body.authToken || (await authTokenForUser(req.user?.id)),
       userId: req.user?.id,
     });
 

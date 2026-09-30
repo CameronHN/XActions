@@ -21,6 +21,7 @@
 
 import express from 'express';
 import { authMiddleware } from '../middleware/auth.js';
+import { authTokenForUser } from '../services/xSession.js';
 
 const router = express.Router();
 
@@ -180,7 +181,7 @@ router.post('/:id/run', async (req, res) => {
     const runPromise = workflows.run(workflow, {
       trigger: 'manual',
       initialContext: context || {},
-      authToken: authToken || req.user?.sessionCookie,
+      authToken: authToken || (await authTokenForUser(req.user?.id)),
       userId: req.user?.id || 'anonymous',
       onProgress: (event) => {
         // Could emit via Socket.IO here

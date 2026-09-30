@@ -7,14 +7,15 @@
 
 import express from 'express';
 import crypto from 'crypto';
+import { queueFailure } from '../../utils/queueResponse.js';
 
 const router = express.Router();
 
-const generateOperationId = () => `ai-${Date.now()}-${crypto.randomBytes(4).toString('hex')}`;
+const generateOperationId = () => `ai-${Date.now()}-${crypto.randomBytes(16).toString('hex')}`;
 
 /** POST /api/ai/billing/checkout */
 router.post('/checkout', async (req, res) => {
-  try { const { queueJob } = await import('../../services/jobQueue.js'); await queueJob({ id: generateOperationId(), type: 'billingCheckout', config: req.body, status: 'queued' }); } catch { /* */ }
+  try { const { queueJob } = await import('../../services/jobQueue.js'); await queueJob({ id: generateOperationId(), type: 'billingCheckout', config: req.body, status: 'queued' }); } catch (err) { return queueFailure(res, err); }
   return res.json({ success: true, operationId: generateOperationId(), status: 'queued' });
 });
 /** POST /api/ai/billing/portal */

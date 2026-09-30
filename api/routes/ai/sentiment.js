@@ -13,7 +13,7 @@ import crypto from 'crypto';
 const router = express.Router();
 
 const generateOperationId = () =>
-  `ai-${Date.now()}-${crypto.randomBytes(4).toString('hex')}`;
+  `ai-${Date.now()}-${crypto.randomBytes(16).toString('hex')}`;
 
 const errorResponse = (res, statusCode, error, message, extras = {}) =>
   res.status(statusCode).json({
@@ -150,7 +150,7 @@ router.post('/monitor', async (req, res) => {
     const { queueJob, cancelJob, getRecentJobs, getJobStatus } = await import('../../services/jobQueue.js');
 
     if (action === 'list') {
-      const jobs = await getRecentJobs({ type: 'reputationMonitor', limit: 20 });
+      const jobs = await getRecentJobs({ sessionCookie: req.sessionCookie, type: 'reputationMonitor', limit: 20 });
       return successResponse(res, {
         monitors: jobs.map(j => ({ monitorId: j.id, username: j.config?.username, status: j.status, createdAt: j.createdAt })),
       });

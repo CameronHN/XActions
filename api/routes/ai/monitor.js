@@ -17,7 +17,7 @@ const router = express.Router();
  * Generate unique operation ID
  */
 const generateOperationId = () => {
-  return `ai-${Date.now()}-${crypto.randomBytes(4).toString('hex')}`;
+  return `ai-${Date.now()}-${crypto.randomBytes(16).toString('hex')}`;
 };
 
 /**
@@ -537,7 +537,7 @@ router.post('/keyword', async (req, res) => {
     }
 
     if (action === 'list') {
-      const jobs = await getRecentJobs({ type: 'monitorKeyword', limit: 20 });
+      const jobs = await getRecentJobs({ sessionCookie: req.sessionCookie, type: 'monitorKeyword', limit: 20 });
       return res.json({ success: true, data: { monitors: jobs.map(j => ({ monitorId: j.id, keyword: j.config?.keyword, status: j.status })) } });
     }
 

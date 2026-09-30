@@ -26,7 +26,7 @@ router.get('/', async (req, res) => {
       operationId: operation.id,
       userId: req.user.id,
       authMethod: req.user.authMethod || 'oauth',
-      config: { sessionCookie: req.user.sessionCookie },
+      config: {},
     });
 
     res.json({ operationId: operation.id, status: 'queued', message: 'Settings fetch queued' });
@@ -62,7 +62,7 @@ router.put('/protected', async (req, res) => {
       operationId: operation.id,
       userId: req.user.id,
       authMethod: req.user.authMethod || 'oauth',
-      config: { enabled, sessionCookie: req.user.sessionCookie },
+      config: { enabled },
     });
 
     res.json({ operationId: operation.id, status: 'queued', message: 'Protected toggle queued' });
@@ -91,7 +91,7 @@ router.get('/blocked', async (req, res) => {
       operationId: operation.id,
       userId: req.user.id,
       authMethod: req.user.authMethod || 'oauth',
-      config: { limit: parseInt(limit), sessionCookie: req.user.sessionCookie },
+      config: { limit: parseInt(limit) },
     });
 
     res.json({ operationId: operation.id, status: 'queued', message: 'Blocked list fetch queued' });
@@ -120,7 +120,7 @@ router.get('/muted', async (req, res) => {
       operationId: operation.id,
       userId: req.user.id,
       authMethod: req.user.authMethod || 'oauth',
-      config: { limit: parseInt(limit), sessionCookie: req.user.sessionCookie },
+      config: { limit: parseInt(limit) },
     });
 
     res.json({ operationId: operation.id, status: 'queued', message: 'Muted list fetch queued' });
@@ -151,7 +151,7 @@ router.post('/download-data', async (req, res) => {
       operationId: operation.id,
       userId: req.user.id,
       authMethod: req.user.authMethod || 'oauth',
-      config: { sessionCookie: req.user.sessionCookie },
+      config: {},
     });
 
     res.json({ operationId: operation.id, status: 'queued', message: 'Data download request queued' });

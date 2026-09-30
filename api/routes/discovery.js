@@ -29,7 +29,7 @@ router.get('/search', async (req, res) => {
       operationId: operation.id,
       userId: req.user.id,
       authMethod: req.user.authMethod || 'oauth',
-      config: { query, limit: parseInt(limit), filter, sessionCookie: req.user.sessionCookie },
+      config: { query, limit: parseInt(limit), filter },
     });
 
     res.json({ operationId: operation.id, status: 'queued', message: 'Search queued' });
@@ -58,7 +58,7 @@ router.get('/trends', async (req, res) => {
       operationId: operation.id,
       userId: req.user.id,
       authMethod: req.user.authMethod || 'oauth',
-      config: { category, sessionCookie: req.user.sessionCookie },
+      config: { category },
     });
 
     res.json({ operationId: operation.id, status: 'queued', message: 'Trends fetch queued' });
@@ -87,7 +87,7 @@ router.get('/explore', async (req, res) => {
       operationId: operation.id,
       userId: req.user.id,
       authMethod: req.user.authMethod || 'oauth',
-      config: { category, limit: parseInt(limit), sessionCookie: req.user.sessionCookie },
+      config: { category, limit: parseInt(limit) },
     });
 
     res.json({ operationId: operation.id, status: 'queued', message: 'Explore feed fetch queued' });

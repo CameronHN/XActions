@@ -18,7 +18,7 @@ import { errorResponse } from '../../utils/errorResponse.js';
 const router = express.Router();
 
 const generateOperationId = () =>
-  `ai-${Date.now()}-${crypto.randomBytes(4).toString('hex')}`;
+  `ai-${Date.now()}-${crypto.randomBytes(16).toString('hex')}`;
 
 /**
  * POST /api/ai/action/validate-session
@@ -1118,7 +1118,7 @@ router.get('/history', async (req, res) => {
   try {
     const { getRecentJobs } = await import('../../services/jobQueue.js');
     const jobs = await getRecentJobs({
-      source: 'ai-api',
+      sessionCookie: req.sessionCookie,
       limit: Math.min(parseInt(limit) || 20, 100),
     });
     

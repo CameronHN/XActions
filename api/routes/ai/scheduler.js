@@ -13,7 +13,7 @@ import crypto from 'crypto';
 const router = express.Router();
 
 const generateOperationId = () =>
-  `ai-${Date.now()}-${crypto.randomBytes(4).toString('hex')}`;
+  `ai-${Date.now()}-${crypto.randomBytes(16).toString('hex')}`;
 
 const errorResponse = (res, statusCode, error, message, extras = {}) =>
   res.status(statusCode).json({
@@ -90,7 +90,7 @@ router.post('/list', async (req, res) => {
 
   try {
     const { getRecentJobs } = await import('../../services/jobQueue.js');
-    const jobs = await getRecentJobs({ type: 'scheduleAdd', limit: Math.min(parseInt(limit) || 50, 200) });
+    const jobs = await getRecentJobs({ sessionCookie: req.sessionCookie, type: 'scheduleAdd', limit: Math.min(parseInt(limit) || 50, 200) });
 
     const filtered = status === 'all' ? jobs : jobs.filter(j => j.status === status);
 

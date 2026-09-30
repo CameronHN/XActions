@@ -36,7 +36,7 @@ router.post('/send', async (req, res) => {
       operationId: operation.id,
       userId: req.user.id,
       authMethod: req.user.authMethod || 'oauth',
-      config: { username, message, sessionCookie: req.user.sessionCookie },
+      config: { username, message },
     });
 
     res.json({ operationId: operation.id, status: 'queued', message: 'DM queued' });
@@ -65,7 +65,7 @@ router.get('/conversations', async (req, res) => {
       operationId: operation.id,
       userId: req.user.id,
       authMethod: req.user.authMethod || 'oauth',
-      config: { limit: parseInt(limit), sessionCookie: req.user.sessionCookie },
+      config: { limit: parseInt(limit) },
     });
 
     res.json({ operationId: operation.id, status: 'queued', message: 'Conversations fetch queued' });
@@ -110,7 +110,7 @@ router.get('/export', async (req, res) => {
       operationId: operation.id,
       userId: req.user.id,
       authMethod: req.user.authMethod || 'oauth',
-      config: { format, limit: parseInt(limit), sessionCookie: req.user.sessionCookie },
+      config: { format, limit: parseInt(limit) },
     });
 
     res.json({ operationId: operation.id, status: 'queued', message: 'DM export queued' });

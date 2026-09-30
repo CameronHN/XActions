@@ -16,7 +16,7 @@ const router = express.Router();
  * Generate unique operation ID
  */
 const generateOperationId = () => {
-  return `ai-${Date.now()}-${crypto.randomBytes(4).toString('hex')}`;
+  return `ai-${Date.now()}-${crypto.randomBytes(16).toString('hex')}`;
 };
 
 /**

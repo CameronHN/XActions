@@ -17,6 +17,7 @@
 
 import express from 'express';
 import { authenticate } from '../middleware/auth.js';
+import { authTokenForUser } from '../services/xSession.js';
 
 const router = express.Router();
 
@@ -67,7 +68,7 @@ router.post('/build', async (req, res) => {
         maxFollowers,
         maxFollowing,
         maxNodes,
-        authToken: authToken || req.user?.sessionCookie,
+        authToken: authToken || (await authTokenForUser(req.user?.id)),
       });
 
       buildPromise.then((result) => {
@@ -96,7 +97,7 @@ router.post('/build', async (req, res) => {
       maxFollowers,
       maxFollowing,
       maxNodes,
-      authToken: authToken || req.user?.sessionCookie,
+      authToken: authToken || (await authTokenForUser(req.user?.id)),
     });
 
     res.status(201).json(result);
