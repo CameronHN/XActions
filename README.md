@@ -1386,8 +1386,8 @@ npm run cli -- profile elonmusk   # run the CLI from the source tree
 npm run mcp                       # run the MCP server
 ```
 
-Node.js 20 or newer is required (`engines.node` is `>=20`); CI runs the suite on
-20, 22 and 24. Three commands before you open a PR, all of which run in CI:
+Node.js 22.12 or newer is required (`engines.node` is `>=22.12`); CI runs the
+suite on 22 and 24. Three commands before you open a PR, all of which run in CI:
 
 ```bash
 npm test              # the whole suite, offline, under a minute

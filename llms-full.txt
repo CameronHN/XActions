@@ -18,12 +18,12 @@ Three runtime contexts. Code that is correct in one is broken in another:
 
 ## Tech Stack
 
-- **Runtime**: Node.js >= 20 (CI runs the suite on 20, 22 and 24), ESM (`"type": "module"`)
+- **Runtime**: Node.js >= 22.12 (CI runs the suite on 22 and 24), ESM (`"type": "module"`)
 - **Backend**: Express.js, Helmet, CORS, rate limiting, Morgan
 - **Database**: PostgreSQL via Prisma ORM (`prisma/schema.prisma`)
 - **Job Queue**: Bull + Redis
 - **Browser Automation**: Puppeteer + puppeteer-extra-plugin-stealth
-- **Testing**: Vitest 4.x (config: `vitest.config.js`); the suite is offline and runs in CI on Node 20, 22 and 24
+- **Testing**: Vitest 5.x (config: `vitest.config.js`); the suite is offline and runs in CI on Node 22 and 24
 - **MCP**: `@modelcontextprotocol/sdk`, stdio and Streamable HTTP transports
 - **Payments**: Stripe + x402 crypto
 - **Realtime**: Socket.io
@@ -137,7 +137,7 @@ xactions/portability            -> ./src/portability/index.js
 - Language: JavaScript (ESM)
 - License: Apache-2.0
 - Author: nirholas (@nichxbt)
-- Node.js >= 20 required
+- Node.js >= 22.12 required
 
 ## Contributing
 

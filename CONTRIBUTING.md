@@ -36,8 +36,9 @@ npm run dev          # the API server on http://localhost:3001
 npm run cli -- profile nasa   # or drive the CLI straight from the source tree
 ```
 
-XActions needs Node.js 20 or newer (`engines.node` is `>=20`). CI runs the test
-suite on 20, 22 and 24, so any of those is a safe local choice.
+XActions needs Node.js 22.12 or newer (`engines.node` is `>=22.12`, the floor
+Puppeteer 25 sets). CI runs the test suite on 22 and 24, so either is a safe
+local choice.
 
 ## ✅ Before you open a PR
 

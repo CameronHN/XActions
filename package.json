@@ -207,7 +207,7 @@
     "x-algorithm"
   ],
   "engines": {
-    "node": ">=20"
+    "node": ">=22.12"
   },
   "files": [
     "src",

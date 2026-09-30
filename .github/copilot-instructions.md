@@ -6,8 +6,8 @@ suggest a change; it deliberately does not restate AGENTS.md, because the last t
 files described the repository they drifted apart.
 
 - **Three runtime contexts, and code correct in one is broken in another.** Browser
-  console scripts have no Node APIs. The library, CLI and MCP server are Node >= 20 ESM
-  (CI runs 20, 22 and 24). The API server is Express with Prisma and Redis. AGENTS.md
+  console scripts have no Node APIs. The library, CLI and MCP server are Node >= 22.12 ESM
+  (CI runs 22 and 24). The API server is Express with Prisma and Redis. AGENTS.md
   has the table.
 - **X's DOM changes constantly.** Prefer `data-testid` selectors; the current set is in
   [`docs/agents/selectors.md`](../docs/agents/selectors.md).

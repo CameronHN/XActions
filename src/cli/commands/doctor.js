@@ -209,7 +209,8 @@ async function checkSessionLive(stored) {
 async function checkBrowser() {
   try {
     const puppeteer = (await import('puppeteer')).default;
-    const executable = puppeteer.executablePath();
+    // Puppeteer 25 resolves the path asynchronously.
+    const executable = await puppeteer.executablePath();
     await fs.access(executable);
     return { status: 'ok', detail: 'Chromium installed for browser-driven commands' };
   } catch {

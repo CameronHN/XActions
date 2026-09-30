@@ -15,6 +15,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **Single-post and thread reads at the edge.** `src/edge/postReader.js` normalises a post across two independent rails onto one shape: text (including long-form past 280 characters), author, every public metric including views and bookmarks, media with direct URLs and the full video variant ladder, entities, and the quoted post. Threads walk up to the root exactly, at any age, then continue down through the author's own replies, and report `truncated: true` rather than implying a thread ended where the public timeline stops.
 
 
+### Changed
+
+- **Node.js 22.12 is now the minimum.** Puppeteer 25, which drives every browser-backed command, requires it, and Node 20 reached end of life in April 2026. `engines`, the CI matrix (now 22 and 24), the release workflows, the Docker image (`node:22-slim`) and the Nixpacks build all moved together. On Node 20, `npm install` warns and the browser commands fail to start; upgrade Node and nothing else changes.
+- **Dependencies:** puppeteer 25, stripe 22, inquirer 14, vitest 5 with its matching coverage plugin, and `docker/setup-buildx-action` v4.
+
 ### Security
 
 - **Every AI endpoint is now priced or explicitly free, and a check keeps it that way.** 101 endpoints were served without payment while their siblings were charged, and 66 prices pointed at routes that do not exist and answered 404 to anyone who paid attention to the catalogue. Neither is visible by reading either file alone, which is why they drifted. `npm run check:x402` reconciles the price table against the routes mounted under `/api/ai`, and fails on a price with no route, a route with neither a price nor a `FREE_OPERATIONS` declaration, or a free declaration for a route that is gone. It runs in `npm run docs:check` and in `npm test`. The rule behind the prices: this API charges for X data and X actions, and does not charge you to manage your relationship with the API itself, so `billing:*`, `webhooks:*` and `action:validate-session` stay free with a written reason.
@@ -33,6 +38,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - `writer:comment` is priced like every other writer operation.
 
 ### Fixed
+
+- **Interactive menus in the CLI open again.** inquirer 14 removed the `list` prompt type, so the workflow trigger, agent niche, growth strategy, activity pattern and notification channel menus threw `Prompt type "list" is not registered` as soon as they appeared. They use `select` now, with the same choices and answers.
+- **Cancelling a paid plan and recording payments work on the current Stripe API.** Stripe moved a subscription's billing-period end onto its items and an invoice's PaymentIntent under `invoice.payments`. Cancelling would have saved an invalid date and failed, and payments would have lost their PaymentIntent id. Both shapes are read now, since webhook payloads follow the endpoint's API version rather than the library's.
+- **`xactions doctor` no longer reports an installed Chromium as missing.** Puppeteer 25 resolves the browser path asynchronously and the check was reading it synchronously.
+- **The Docker build stops downloading a Chrome it never uses.** The image runs the distro's Chromium, but the dependency stage fetched Puppeteer's own copy on every build because the skip variable had an old name and was set in the wrong stage.
+- **`npm ci` and CI are green again.** The vitest 5 bump left the coverage plugin on 4.x, whose peer range refused vitest 5, so installs failed on every branch.
 
 - **`/api/ai/alert/new-followers` finally resolves.** The `/alert` mount exists for backward compatibility with that path, but the handler was declared as `/alert/new-followers`, so the mount produced `/api/ai/alert/alert/new-followers` and the documented path never existed.
 - **The x402 client no longer loads a signing library it may never use.** viem is built on the first payment instead of at construction, so creating a client is instant and the spend limits hold whether or not a wallet was configured.
