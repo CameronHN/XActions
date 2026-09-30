@@ -96,6 +96,13 @@ function ok200Async(description) {
 /**
  * Helper — session body property
  */
+/** Start a monitor, or act on one a previous call started. */
+const monitorAction = {
+  action: { type: 'string', enum: ['start', 'list', 'status', 'pause', 'resume', 'stop'], default: 'start', description: 'start creates a monitor; the others need monitorId' },
+  monitorId: { type: 'string', description: 'The monitorId a start call returned' },
+  webhookUrl: { type: 'string', format: 'uri', description: 'Receives each event as a signed POST' },
+};
+
 const sessionProp = {
   sessionCookie: {
     type: 'string',
@@ -717,15 +724,15 @@ const S = {
   },
   monitorKeyword: {
     type: 'object', required: ['keyword'],
-    properties: { ...sessionProp, keyword: { type: 'string' }, interval: { type: 'integer', default: 60 } },
+    properties: { ...sessionProp, ...monitorAction, keyword: { type: 'string' }, interval: { type: 'integer', default: 60 } },
   },
   followerAlerts: {
     type: 'object', required: ['username'],
-    properties: { ...sessionProp, username: { type: 'string' } },
+    properties: { ...sessionProp, ...monitorAction, username: { type: 'string' } },
   },
   trackEngagement: {
     type: 'object', required: ['tweetId'],
-    properties: { ...sessionProp, tweetId: { type: 'string' } },
+    properties: { ...sessionProp, ...monitorAction, tweetId: { type: 'string' } },
   },
 
   // ── Sentiment ────────────────────────────────────────────────────
@@ -734,8 +741,9 @@ const S = {
     properties: { ...sessionProp, query: { type: 'string' }, limit: { type: 'integer', default: 100 } },
   },
   monitorSentiment: {
-    type: 'object', required: ['brand'],
-    properties: { ...sessionProp, brand: { type: 'string' }, interval: { type: 'integer', default: 3600 } },
+    type: 'object',
+    description: 'username is required to start a monitor',
+    properties: { ...sessionProp, ...monitorAction, username: { type: 'string', description: 'The account whose mentions are scored' }, interval: { type: 'string', default: '1h', description: 'A duration such as 30m, 1h or 6h; kept between 5 minutes and 1 day' } },
   },
   sentimentReport: {
     type: 'object', required: ['username'],
@@ -840,11 +848,23 @@ const S = {
   },
   migrateAccount: {
     type: 'object', required: ['platform'],
-    properties: { ...sessionProp, platform: { type: 'string', enum: ['bluesky', 'mastodon', 'threads'] } },
+    properties: {
+      ...sessionProp,
+      platform: { type: 'string', enum: ['bluesky', 'mastodon', 'nostr'] },
+      dryRun: { type: 'boolean', enum: [true], default: true, description: 'Only the migration plan is produced; live migration needs target-platform credentials this API does not accept.' },
+      username: { type: 'string' },
+    },
   },
   diffExports: {
-    type: 'object', required: ['export1', 'export2'],
-    properties: { ...sessionProp, export1: { type: 'string' }, export2: { type: 'string' } },
+    type: 'object',
+    description: 'Send dirA and dirB (exportId values from /export-account), or exportA and exportB (export objects).',
+    properties: {
+      ...sessionProp,
+      dirA: { type: 'string', description: 'exportId of the earlier export' },
+      dirB: { type: 'string', description: 'exportId of the later export' },
+      exportA: { type: 'object' },
+      exportB: { type: 'object' },
+    },
   },
   importData: {
     type: 'object', required: ['platform'],
@@ -888,15 +908,22 @@ const S = {
   },
   addRSS: {
     type: 'object', required: ['url'],
-    properties: { ...sessionProp, url: { type: 'string', format: 'uri' }, template: { type: 'string' } },
+    properties: {
+      ...sessionProp,
+      url: { type: 'string', format: 'uri' },
+      postTemplate: { type: 'string', default: '{{title}} {{url}}', description: 'Uses {{title}}, {{url}}, {{link}} or {{description}}' },
+      interval: { type: 'string', default: '1h', description: 'How often to check, 15m to 7d' },
+      maxPerDay: { type: 'integer', default: 5, maximum: 20 },
+      autoCheck: { type: 'boolean', default: true, description: 'Check and post automatically every interval until rss-remove. False posts only when rss-check is called.' },
+    },
   },
   checkRSS: {
     type: 'object',
     properties: { ...sessionProp, feedId: { type: 'string' } },
   },
   getRSSDrafts: {
-    type: 'object',
-    properties: { ...sessionProp },
+    type: 'object', required: ['feedId'],
+    properties: { ...sessionProp, feedId: { type: 'string', description: 'The feedId rss-add returned' }, limit: { type: 'integer', default: 10, maximum: 50 } },
   },
   findEvergreen: {
     type: 'object',
@@ -933,8 +960,13 @@ const S = {
 
   // ── Notifications ────────────────────────────────────────────────
   sendWebhook: {
-    type: 'object', required: ['event', 'url'],
-    properties: { url: { type: 'string', format: 'uri' }, event: { type: 'string' }, payload: { type: 'object' } },
+    type: 'object', required: ['webhookUrl'],
+    properties: {
+      webhookUrl: { type: 'string', format: 'uri', description: 'A public https URL; private addresses are refused' },
+      channel: { type: 'string', enum: ['webhook', 'slack', 'discord'], default: 'webhook' },
+      event: { type: 'string', default: 'xactions.notification' },
+      data: { type: 'object' },
+    },
   },
   testWebhook: {
     type: 'object', required: ['url'],
@@ -1056,6 +1088,12 @@ Free alternatives: Browser scripts, CLI, and Node.js library at https://xactions
           in: 'header',
           name: 'X-PAYMENT',
           description: 'Signed USDC payment payload per x402 protocol',
+        },
+        bearerAuth: {
+          type: 'http',
+          scheme: 'bearer',
+          bearerFormat: 'JWT',
+          description: 'An XActions account token, for account-level endpoints such as billing',
         },
         sessionCookie: {
           type: 'apiKey',
@@ -2838,9 +2876,17 @@ Free alternatives: Browser scripts, CLI, and Node.js library at https://xactions
       '/api/ai/schedule/rss-drafts': {
         post: {
           tags: ['Schedule'],
-          summary: 'Get RSS-generated drafts',
+          summary: 'Preview what a saved RSS feed would post next',
           requestBody: { required: true, content: { 'application/json': { schema: S.getRSSDrafts } } },
           responses: { 200: ok200('RSS drafts') },
+        },
+      },
+      '/api/ai/schedule/rss-remove': {
+        post: {
+          tags: ['Schedule'],
+          summary: 'Stop checking a saved RSS feed and delete it (free)',
+          requestBody: { required: true, content: { 'application/json': { schema: S.getRSSDrafts } } },
+          responses: { 200: ok200('Feed removed') },
         },
       },
       '/api/ai/schedule/evergreen': {
@@ -3269,7 +3315,7 @@ Free alternatives: Browser scripts, CLI, and Node.js library at https://xactions
       '/api/ai/moderation/verified-only': {
         post: {
           tags: ['Moderation'],
-          summary: 'Toggle verified-only replies',
+          summary: 'Limit replies to verified accounts on given posts (or the latest posts)',
           'x-payment-info': paymentInfo('moderation:verified-only'),
           requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', properties: { ...sessionProp, enabled: { type: 'boolean' } } } } } },
           responses: { 200: ok200('Setting updated'), 402: payment402 },
@@ -3304,15 +3350,6 @@ Free alternatives: Browser scripts, CLI, and Node.js library at https://xactions
           responses: { 200: ok200Async('Backup started'), 402: payment402 },
         },
       },
-      '/api/ai/account/download-data': {
-        post: {
-          tags: ['Account'],
-          summary: 'Request official Twitter data archive',
-          'x-payment-info': paymentInfo('account:download-data'),
-          requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', properties: { ...sessionProp } } } } },
-          responses: { 200: ok200Async('Data download requested'), 402: payment402 },
-        },
-      },
       '/api/ai/account/audit-followers': {
         post: {
           tags: ['Account'],
@@ -3325,7 +3362,7 @@ Free alternatives: Browser scripts, CLI, and Node.js library at https://xactions
       '/api/ai/account/delegate-access': {
         post: {
           tags: ['Account'],
-          summary: 'Manage delegate account access',
+          summary: 'List the accounts with delegate access (action: list)',
           'x-payment-info': paymentInfo('account:delegate-access'),
           requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', properties: { ...sessionProp } } } } },
           responses: { 200: ok200('Delegate access updated'), 402: payment402 },
@@ -3334,25 +3371,16 @@ Free alternatives: Browser scripts, CLI, and Node.js library at https://xactions
       '/api/ai/account/verify-identity': {
         post: {
           tags: ['Account'],
-          summary: 'Trigger identity verification flow',
+          summary: 'Read the account\'s ID verification status',
           'x-payment-info': paymentInfo('account:verify-identity'),
           requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', properties: { ...sessionProp } } } } },
           responses: { 200: ok200('Verification initiated'), 402: payment402 },
         },
       },
-      '/api/ai/account/upload-contacts': {
-        post: {
-          tags: ['Account'],
-          summary: 'Upload and sync contacts',
-          'x-payment-info': paymentInfo('account:upload-contacts'),
-          requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', properties: { ...sessionProp } } } } },
-          responses: { 200: ok200Async('Contacts uploaded'), 402: payment402 },
-        },
-      },
       '/api/ai/account/multi-account': {
         post: {
           tags: ['Account'],
-          summary: 'Multi-account management',
+          summary: 'List the accounts linked to this login (action: list)',
           'x-payment-info': paymentInfo('account:multi'),
           requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', properties: { ...sessionProp } } } } },
           responses: { 200: ok200('Accounts listed'), 402: payment402 },
@@ -3385,15 +3413,6 @@ Free alternatives: Browser scripts, CLI, and Node.js library at https://xactions
           responses: { 200: ok200('Connected accounts'), 402: payment402 },
         },
       },
-      '/api/ai/account/appeal-suspension': {
-        post: {
-          tags: ['Account'],
-          summary: 'Appeal account suspension',
-          'x-payment-info': paymentInfo('profile:get'),
-          requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', properties: { ...sessionProp } } } } },
-          responses: { 200: ok200('Appeal submitted'), 402: payment402 },
-        },
-      },
       '/api/ai/account/qr-code': {
         post: {
           tags: ['Account'],
@@ -3408,7 +3427,7 @@ Free alternatives: Browser scripts, CLI, and Node.js library at https://xactions
       '/api/ai/ads/campaigns': {
         post: {
           tags: ['Ads'],
-          summary: 'Manage ad campaigns',
+          summary: 'List ad campaigns (action: list)',
           'x-payment-info': paymentInfo('ads:manage'),
           requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', properties: { ...sessionProp } } } } },
           responses: { 200: ok200('Ad campaigns'), 402: payment402 },
@@ -3426,19 +3445,10 @@ Free alternatives: Browser scripts, CLI, and Node.js library at https://xactions
       '/api/ai/ads/media-studio': {
         post: {
           tags: ['Ads'],
-          summary: 'Access Media Studio for ads',
+          summary: 'List the Media Studio library',
           'x-payment-info': paymentInfo('ads:media-studio'),
           requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', properties: { ...sessionProp } } } } },
           responses: { 200: ok200('Media Studio data'), 402: payment402 },
-        },
-      },
-      '/api/ai/ads/boost': {
-        post: {
-          tags: ['Ads'],
-          summary: 'Boost a tweet with ad spend',
-          'x-payment-info': paymentInfo('ads:manage'),
-          requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['tweetId'], properties: { ...sessionProp, tweetId: { type: 'string' }, budget: { type: 'number' } } } } } },
-          responses: { 200: ok200Async('Tweet boosted'), 402: payment402 },
         },
       },
       '/api/ai/ads/analytics': {
@@ -3464,19 +3474,10 @@ Free alternatives: Browser scripts, CLI, and Node.js library at https://xactions
       '/api/ai/xpro/columns': {
         post: {
           tags: ['XPro'],
-          summary: 'Manage X Pro monitoring columns',
+          summary: 'List X Pro deck columns (action: list)',
           'x-payment-info': paymentInfo('xpro:manage'),
           requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', properties: { ...sessionProp } } } } },
           responses: { 200: ok200Async('Columns managed'), 402: payment402 },
-        },
-      },
-      '/api/ai/xpro/manage': {
-        post: {
-          tags: ['XPro'],
-          summary: 'Manage X Pro settings and layout',
-          'x-payment-info': paymentInfo('xpro:manage'),
-          requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', properties: { ...sessionProp } } } } },
-          responses: { 200: ok200Async('X Pro managed'), 402: payment402 },
         },
       },
 
@@ -3564,24 +3565,6 @@ Free alternatives: Browser scripts, CLI, and Node.js library at https://xactions
           responses: { 200: ok200('Premium status'), 402: payment402 },
         },
       },
-      '/api/ai/premium/gift': {
-        post: {
-          tags: ['Premium'],
-          summary: 'Gift Premium subscription to a user',
-          'x-payment-info': paymentInfo('premium:gift'),
-          requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['username'], properties: { ...sessionProp, username: { type: 'string' } } } } } },
-          responses: { 200: ok200Async('Premium gifted'), 402: payment402 },
-        },
-      },
-      '/api/ai/premium/subscribe': {
-        post: {
-          tags: ['Premium'],
-          summary: 'Manage Premium subscription',
-          'x-payment-info': paymentInfo('premium:subscribe'),
-          requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', properties: { ...sessionProp } } } } },
-          responses: { 200: ok200Async('Subscription managed'), 402: payment402 },
-        },
-      },
       '/api/ai/premium/features': {
         post: {
           tags: ['Premium'],
@@ -3636,15 +3619,6 @@ Free alternatives: Browser scripts, CLI, and Node.js library at https://xactions
           'x-payment-info': paymentInfo('settings:muted'),
           requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', properties: { ...sessionProp } } } } },
           responses: { 200: ok200('Muted accounts'), 402: payment402 },
-        },
-      },
-      '/api/ai/settings/download-data': {
-        post: {
-          tags: ['Settings'],
-          summary: 'Request Twitter data download',
-          'x-payment-info': paymentInfo('settings:download-data'),
-          requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', properties: { ...sessionProp } } } } },
-          responses: { 200: ok200Async('Data download requested'), 402: payment402 },
         },
       },
       '/api/ai/settings/advanced': {
@@ -3952,8 +3926,10 @@ Free alternatives: Browser scripts, CLI, and Node.js library at https://xactions
       '/api/ai/billing/checkout': {
         post: {
           tags: ['Billing'],
-          summary: 'Create Stripe checkout session',
-          requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', properties: { plan: { type: 'string', enum: ['basic', 'pro', 'enterprise'] } } } } } },
+          summary: 'Create a Stripe Checkout session for an XActions plan',
+          description: 'Subscriptions belong to an XActions account: send Authorization: Bearer <token>. Paying per call with x402 needs no subscription. Enterprise is arranged with sales.',
+          security: [{ bearerAuth: [] }],
+          requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['plan'], properties: { plan: { type: 'string', enum: ['pro', 'business'] } } } } } },
           responses: { 200: ok200('Checkout session created') },
         },
       },
@@ -3994,7 +3970,8 @@ Free alternatives: Browser scripts, CLI, and Node.js library at https://xactions
       '/api/ai/webhooks/create': {
         post: {
           tags: ['Webhooks'],
-          summary: 'Register a webhook endpoint',
+          summary: 'Register a webhook endpoint for your session',
+          description: 'Webhooks belong to the X session that created them, so every /api/ai/webhooks call needs that session. Events: new_follower, unfollower, followed, unfollowed, keyword_match, mention, stream_item, engagement_update, reputation_alert. Each delivery is signed.',
           requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['url'], properties: { url: { type: 'string', format: 'uri' }, events: { type: 'array', items: { type: 'string' } } } } } } },
           responses: { 200: ok200Async('Webhook created') },
         },
@@ -4482,6 +4459,7 @@ const ALL_PAID_RESOURCES = [
   'POST /api/ai/schedule/rss-add',
   'POST /api/ai/schedule/rss-check',
   'POST /api/ai/schedule/rss-drafts',
+  'POST /api/ai/schedule/rss-remove',
   'POST /api/ai/schedule/evergreen',
 
   // ── Optimizer ─────────────────────────────────────────────────────
@@ -4557,29 +4535,24 @@ const ALL_PAID_RESOURCES = [
 
   // ── Account ───────────────────────────────────────────────────────
   'POST /api/ai/account/backup',
-  'POST /api/ai/account/download-data',
   'POST /api/ai/account/audit-followers',
   'POST /api/ai/account/delegate-access',
   'POST /api/ai/account/verify-identity',
-  'POST /api/ai/account/upload-contacts',
   'POST /api/ai/account/multi-account',
   'POST /api/ai/account/join-date',
   'POST /api/ai/account/login-history',
   'POST /api/ai/account/connected-accounts',
-  'POST /api/ai/account/appeal-suspension',
   'POST /api/ai/account/qr-code',
 
   // ── Ads ───────────────────────────────────────────────────────────
   'POST /api/ai/ads/campaigns',
   'POST /api/ai/ads/dashboard',
   'POST /api/ai/ads/media-studio',
-  'POST /api/ai/ads/boost',
   'POST /api/ai/ads/analytics',
 
   // ── X Pro ─────────────────────────────────────────────────────────
   'POST /api/ai/xpro/dashboard',
   'POST /api/ai/xpro/columns',
-  'POST /api/ai/xpro/manage',
 
   // ── Discovery ─────────────────────────────────────────────────────
   'POST /api/ai/discovery/trending',
@@ -4593,8 +4566,6 @@ const ALL_PAID_RESOURCES = [
 
   // ── Premium ───────────────────────────────────────────────────────
   'POST /api/ai/premium/check',
-  'POST /api/ai/premium/gift',
-  'POST /api/ai/premium/subscribe',
   'POST /api/ai/premium/features',
 
   // ── Settings ──────────────────────────────────────────────────────
@@ -4603,7 +4574,6 @@ const ALL_PAID_RESOURCES = [
   'POST /api/ai/settings/protected',
   'POST /api/ai/settings/blocked',
   'POST /api/ai/settings/muted',
-  'POST /api/ai/settings/download-data',
   'POST /api/ai/settings/advanced',
   'POST /api/ai/settings/block-list',
 

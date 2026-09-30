@@ -863,8 +863,11 @@ GET  /api/settings/
 PUT  /api/settings/protected     { "enabled": true }
 GET  /api/settings/blocked
 GET  /api/settings/muted
-POST /api/settings/download-data
 ```
+
+X only builds a data archive after the account holder confirms their password
+and a code sent by email or SMS, so there is no endpoint that requests one.
+Request it at [x.com/settings/download_your_data](https://x.com/settings/download_your_data).
 
 ---
 

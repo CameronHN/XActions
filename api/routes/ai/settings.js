@@ -2,6 +2,9 @@
 /**
  * AI Settings & Privacy Endpoints
  *
+ * Requesting the data archive is not offered: X asks for the account password
+ * and a code it sends by email or SMS before it builds one.
+ *
  * @module api/routes/ai/settings
  */
 
@@ -34,8 +37,6 @@ router.post('/protected', async (req, res) => { const s = requireSession(req, re
 router.post('/blocked', async (req, res) => { const s = requireSession(req, res); if (!s) return; return queueOp(res, generateOperationId(), 'settingsBlocked', { session: s }); });
 /** POST /api/ai/settings/muted */
 router.post('/muted', async (req, res) => { const s = requireSession(req, res); if (!s) return; return queueOp(res, generateOperationId(), 'settingsMuted', { session: s }); });
-/** POST /api/ai/settings/download-data */
-router.post('/download-data', async (req, res) => { const s = requireSession(req, res); if (!s) return; return queueOp(res, generateOperationId(), 'settingsDownloadData', { session: s }); });
 /** POST /api/ai/settings/advanced */
 router.post('/advanced', async (req, res) => { const s = requireSession(req, res); if (!s) return; return queueOp(res, generateOperationId(), 'settingsAdvanced', { session: s, ...req.body }); });
 /** POST /api/ai/settings/block-list */

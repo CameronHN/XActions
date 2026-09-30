@@ -9,12 +9,24 @@ const prisma = new PrismaClient();
 
 router.use(authMiddleware);
 
+/**
+ * Likes, replies and bookmarks act through the user's saved X session: the
+ * OAuth connection is granted read and follow scopes only, so X would refuse
+ * these writes from it. Answer before queuing anything.
+ */
+function requireSavedSession(req, res) {
+  if (req.user.sessionCookie) return true;
+  res.status(400).json({
+    error: 'X session not saved',
+    message: 'Save your X session with POST /api/session/save-session to like, reply or bookmark.',
+  });
+  return false;
+}
+
 // Like a tweet
 router.post('/like/:tweetId', async (req, res) => {
   try {
-    if (!req.user.twitterAccessToken && !req.user.sessionCookie) {
-      return res.status(400).json({ error: 'Twitter account not connected' });
-    }
+    if (!requireSavedSession(req, res)) return;
 
     const { tweetId } = req.params;
     const operation = await prisma.operation.create({
@@ -44,6 +56,8 @@ router.post('/like/:tweetId', async (req, res) => {
 // Unlike a tweet
 router.delete('/like/:tweetId', async (req, res) => {
   try {
+    if (!requireSavedSession(req, res)) return;
+
     const { tweetId } = req.params;
     const operation = await prisma.operation.create({
       data: {
@@ -72,9 +86,7 @@ router.delete('/like/:tweetId', async (req, res) => {
 // Reply to a tweet
 router.post('/reply/:tweetId', async (req, res) => {
   try {
-    if (!req.user.twitterAccessToken && !req.user.sessionCookie) {
-      return res.status(400).json({ error: 'Twitter account not connected' });
-    }
+    if (!requireSavedSession(req, res)) return;
 
     const { tweetId } = req.params;
     const { text } = req.body;
@@ -107,6 +119,8 @@ router.post('/reply/:tweetId', async (req, res) => {
 // Bookmark a tweet
 router.post('/bookmark/:tweetId', async (req, res) => {
   try {
+    if (!requireSavedSession(req, res)) return;
+
     const { tweetId } = req.params;
     const operation = await prisma.operation.create({
       data: {
@@ -171,6 +185,10 @@ router.post('/auto-like', async (req, res) => {
 // Get engagement analytics
 router.get('/analytics', async (req, res) => {
   try {
+    if (!req.user.twitterAccessToken && !req.user.sessionCookie) {
+      return res.status(400).json({ error: 'Twitter account not connected' });
+    }
+
     const { period = '7d' } = req.query;
     const operation = await prisma.operation.create({
       data: {

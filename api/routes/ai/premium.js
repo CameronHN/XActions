@@ -2,6 +2,10 @@
 /**
  * AI Premium & Subscription Endpoints
  *
+ * Premium status and the Premium features active on an account. Buying or
+ * gifting Premium is not offered: X takes payment through its own card
+ * checkout, which a session cannot complete.
+ *
  * @module api/routes/ai/premium
  */
 
@@ -26,10 +30,6 @@ const queueOp = async (res, id, type, config) => {
 
 /** POST /api/ai/premium/check */
 router.post('/check', async (req, res) => { const s = requireSession(req, res); if (!s) return; return queueOp(res, generateOperationId(), 'premiumCheck', { session: s, ...req.body }); });
-/** POST /api/ai/premium/gift */
-router.post('/gift', async (req, res) => { const s = requireSession(req, res); if (!s) return; return queueOp(res, generateOperationId(), 'premiumGift', { session: s, ...req.body }); });
-/** POST /api/ai/premium/subscribe */
-router.post('/subscribe', async (req, res) => { const s = requireSession(req, res); if (!s) return; return queueOp(res, generateOperationId(), 'premiumSubscribe', { session: s, ...req.body }); });
 /** POST /api/ai/premium/features */
 router.post('/features', async (req, res) => { const s = requireSession(req, res); if (!s) return; return queueOp(res, generateOperationId(), 'premiumFeatures', { session: s }); });
 

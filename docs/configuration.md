@@ -163,6 +163,8 @@ scripts.
 | `JWT_SECRET` | **Required in production.** The server refuses to start without it. |
 | `SESSION_SECRET` | **Required in production.** Same. |
 | `ADMIN_API_KEY` | Guards the admin endpoints. Generate with `openssl rand -hex 32`. |
+| `COOKIE_ENCRYPTION_KEY` | Encrypts saved X sessions, and the session a running monitor or RSS feed keeps so it can act later. Falls back to `SESSION_SECRET`, then `JWT_SECRET`. Changing it makes saved sessions unreadable, so users save them again. |
+| `XACTIONS_WEBHOOK_ALLOW_PRIVATE` | `true` lets webhooks and notifications deliver to private or internal addresses. Off by default, so a caller cannot point the server at its own network. |
 
 ### Database and queue
 
@@ -170,6 +172,9 @@ scripts.
 |----------|-------|
 | `DATABASE_URL` | PostgreSQL connection string. See [database.md](database.md). |
 | `REDIS_HOST` / `REDIS_PORT` / `REDIS_PASSWORD` | Backing store for the background job queue. |
+| `REDIS_QUEUE_PREFIX` | Key prefix for the queue, so one Redis can serve several deployments. Default `xactions`. |
+| `XACTIONS_WORKER_CONCURRENCY` | How many jobs one worker process runs at once. Default `8`; each job type also keeps its own lower limit. See [architecture.md](architecture.md#background-jobs). |
+| `XACTIONS_HOME` | Where the worker keeps per-caller state that is not in Postgres or Redis: the daily action ledger, follow dates for smart unfollow, saved RSS feeds, personas, workflows, teams and exports, and the analytics, CRM and lead store. Default `~/.xactions`. Run one worker host, or put it on a shared volume. |
 
 ### Scraping
 

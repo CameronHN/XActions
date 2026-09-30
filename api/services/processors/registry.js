@@ -11,6 +11,7 @@
  *       concurrency: 3,                              // optional, default 2
  *       write: true,                                 // acts on the account
  *       description: 'Like one post',                // optional
+ *       quiet: false,                                // true: no per-run log lines (frequent internal jobs)
  *     },
  *   };
  *
@@ -65,6 +66,7 @@ export async function loadProcessors(dir = HERE) {
           run: def.run,
           concurrency: def.concurrency ?? 2,
           write: Boolean(def.write),
+          quiet: Boolean(def.quiet),
           description: def.description || '',
           source: file,
         });

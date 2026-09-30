@@ -2,7 +2,10 @@
 /**
  * AI Ads & Business Endpoints
  *
- * Ad campaigns, dashboard, media studio, boosts, ads analytics.
+ * Ad campaigns, dashboard, media studio and ads analytics, read from
+ * ads.x.com and studio.x.com as the caller's session. Boosting a post is not
+ * offered: it spends money through the ad account's payment method, a
+ * checkout X confirms with the account holder.
  *
  * @module api/routes/ai/ads
  */
@@ -47,14 +50,6 @@ router.post('/media-studio', async (req, res) => {
   const session = requireSession(req, res); if (!session) return;
   const { action = 'list' } = req.body;
   return queueOperation(res, generateOperationId(), 'adsMediaStudio', { session, action });
-});
-
-/** POST /api/ai/ads/boost */
-router.post('/boost', async (req, res) => {
-  const session = requireSession(req, res); if (!session) return;
-  const { tweetId, budget } = req.body;
-  if (!tweetId) return res.status(400).json({ error: 'INVALID_INPUT', message: 'tweetId required' });
-  return queueOperation(res, generateOperationId(), 'adsBoost', { session, tweetId, budget });
 });
 
 /** POST /api/ai/ads/analytics */

@@ -370,7 +370,6 @@ export const AI_OPERATION_PRICES = {
   'settings:protected': '$0.005',    // Toggle protected
   'settings:blocked': '$0.01',       // Get blocked accounts
   'settings:muted': '$0.01',         // Get muted accounts
-  'settings:download-data': '$0.02', // Request data download
   
   // Grok AI operations
   'grok:query': '$0.02',             // Query Grok
@@ -431,11 +430,9 @@ export const AI_OPERATION_PRICES = {
 
   // Account operations (browser scripts: backupAccount, auditFollowers, etc.)
   'account:backup': '$0.05',         // Full account backup
-  'account:download-data': '$0.02',  // Request data download
   'account:audit-followers': '$0.02', // Audit followers for bots/fakes
   'account:delegate-access': '$0.01', // Manage delegate access
   'account:verify-identity': '$0.005', // ID verification flow
-  'account:upload-contacts': '$0.005', // Upload/sync contacts
 
   // Ads operations (browser scripts: adCampaignManager, adsManager, etc.)
   'ads:dashboard': '$0.01',          // Ads dashboard/analytics
@@ -443,7 +440,6 @@ export const AI_OPERATION_PRICES = {
 
   // X Pro operations (browser scripts: xPro, xProManager)
   'xpro:dashboard': '$0.01',         // X Pro/TweetDeck dashboard
-  'xpro:manage': '$0.01',            // X Pro column management
 
   // Additional posting operations (browser scripts not yet covered)
 
@@ -464,8 +460,6 @@ export const AI_OPERATION_PRICES = {
   // Additional spaces operations
 
   // Additional premium operations
-  'premium:gift': '$0.02',           // Gift Premium subscription
-  'premium:subscribe': '$0.005',     // Premium subscription management
 
   // Additional settings operations
   'settings:advanced': '$0.005',     // Advanced settings
@@ -657,7 +651,6 @@ export const AI_OPERATION_PRICES = {
   'analyze:tweet': '$0.005',          // Analyze a single tweet
 
   // Account tools
-  'account:appeal-suspension': '$0.005',
   'account:connected-accounts': '$0.005',
   'account:join-date': '$0.005',
   'account:login-history': '$0.005',
@@ -666,7 +659,6 @@ export const AI_OPERATION_PRICES = {
 
   // Ads
   'ads:analytics': '$0.02',
-  'ads:boost': '$0.02',
   'ads:campaigns': '$0.02',
 
   // Articles
@@ -802,6 +794,7 @@ export const FREE_OPERATIONS = {
   'billing:plans': 'This endpoint is the price list itself; charging for it would be circular.',
   'billing:usage': 'Your own record of what you have already spent here.',
   'billing:invoices': 'Your own invoices from us, which cost nothing to look at.',
+  'schedule:rss-remove': 'Stopping a feed you added; charging to stop a charge would trap callers.',
   'webhooks:create': 'Configuring where we deliver your events.',
   'webhooks:list': 'Configuring where we deliver your events.',
   'webhooks:delete': 'Configuring where we deliver your events.',

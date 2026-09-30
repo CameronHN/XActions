@@ -12,8 +12,10 @@ router.use(authMiddleware);
 // Search tweets
 router.get('/search', async (req, res) => {
   try {
-    const { query, limit = 50, filter } = req.query;
-    if (!query) return res.status(400).json({ error: 'Search query is required' });
+    const { limit = 50, filter } = req.query;
+    // `q` is the name the docs and x.com's own search URL use.
+    const query = req.query.query || req.query.q;
+    if (!query) return res.status(400).json({ error: 'Search query is required (?q= or ?query=)' });
 
     const operation = await prisma.operation.create({
       data: {
@@ -42,14 +44,15 @@ router.get('/search', async (req, res) => {
 // Get trends
 router.get('/trends', async (req, res) => {
   try {
-    const { category } = req.query;
+    const { category, woeid, limit = 30 } = req.query;
+    const config = { category, woeid, limit: parseInt(limit) };
 
     const operation = await prisma.operation.create({
       data: {
         userId: req.user.id,
         type: 'getTrends',
         status: 'pending',
-        config: JSON.stringify({ category }),
+        config: JSON.stringify(config),
       },
     });
 
@@ -58,7 +61,7 @@ router.get('/trends', async (req, res) => {
       operationId: operation.id,
       userId: req.user.id,
       authMethod: req.user.authMethod || 'oauth',
-      config: { category },
+      config,
     });
 
     res.json({ operationId: operation.id, status: 'queued', message: 'Trends fetch queued' });

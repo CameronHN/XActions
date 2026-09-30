@@ -2,6 +2,10 @@
 /**
  * AI X Pro / TweetDeck Endpoints
  *
+ * Reads the caller's X Pro deck and its columns from pro.x.com. Changing the
+ * deck layout is not offered: pro.x.com keeps it behind a private API with no
+ * contract XActions can hold to.
+ *
  * @module api/routes/ai/xpro
  */
 
@@ -28,7 +32,5 @@ const queueOp = async (res, id, type, config) => {
 router.post('/dashboard', async (req, res) => { const s = requireSession(req, res); if (!s) return; return queueOp(res, generateOperationId(), 'xproDashboard', { session: s }); });
 /** POST /api/ai/xpro/columns */
 router.post('/columns', async (req, res) => { const s = requireSession(req, res); if (!s) return; return queueOp(res, generateOperationId(), 'xproColumns', { session: s, ...req.body }); });
-/** POST /api/ai/xpro/manage */
-router.post('/manage', async (req, res) => { const s = requireSession(req, res); if (!s) return; return queueOp(res, generateOperationId(), 'xproManage', { session: s, ...req.body }); });
 
 export default router;

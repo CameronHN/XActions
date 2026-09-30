@@ -45,6 +45,7 @@ router.post('/create', async (req, res) => {
   const { name, description, members = [] } = req.body;
 
   if (!name) return res.status(400).json({ error: 'INVALID_INPUT', message: 'name is required' });
+  if (!Array.isArray(members)) return res.status(400).json({ error: 'INVALID_INPUT', message: 'members must be an array of X usernames' });
 
   try {
     const operationId = generateOperationId();
@@ -73,23 +74,25 @@ router.post('/create', async (req, res) => {
 
 /**
  * POST /api/ai/teams/members
- * Get members of a team
+ * Get members of a team this session created
  */
 router.post('/members', async (req, res) => {
   const { teamId } = req.body;
   if (!teamId) return res.status(400).json({ error: 'INVALID_INPUT', message: 'teamId is required' });
 
   try {
-    const { getJobStatus } = await import('../../services/jobQueue.js');
-    const teamJob = await getJobStatus(teamId);
+    const { ownerStore, ownerKeyForSession } = await import('../../services/processors/content.processors.js');
+    const team = await ownerStore.get(ownerKeyForSession(req.sessionCookie), 'teams', teamId);
 
-    if (!teamJob) return res.status(404).json({ error: 'NOT_FOUND', message: 'Team not found' });
+    if (!team) return res.status(404).json({ error: 'NOT_FOUND', message: 'Team not found' });
 
     return successResponse(res, {
       teamId,
-      name: teamJob.config?.name,
-      members: teamJob.result?.members || teamJob.config?.members || [],
-      createdAt: teamJob.createdAt,
+      name: team.name,
+      description: team.description,
+      members: team.members,
+      notFound: team.notFound,
+      createdAt: team.createdAt,
     });
   } catch (error) {
     return errorResponse(res, 500, 'ACTION_FAILED', error.message);

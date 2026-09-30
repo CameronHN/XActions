@@ -2,7 +2,7 @@
 import Queue from 'bull';
 import { PrismaClient } from '@prisma/client';
 import crypto from 'node:crypto';
-import { createJobContext, isPermanentFailure } from './processors/context.js';
+import { SESSION_KEYS, createJobContext, isPermanentFailure, sessionHashOf } from './processors/context.js';
 import { assertRunnable, loadProcessors } from './processors/registry.js';
 
 const prisma = new PrismaClient();
@@ -78,7 +78,7 @@ async function addJob(type, data, options = {}) {
  * id, so a status poll finds the job by the id the route handed out. A type
  * with no processor is refused here, before anything is queued or charged.
  *
- * @param {object} jobData - `{ type, operationId?, id?, userId?, config }`
+ * @param {object} jobData - `{ type, operationId?, id?, userId?, config, delay?, repeat? }`
  */
 async function queueJob(jobData) {
   assertRunnable(processors, jobData.type);
@@ -93,10 +93,25 @@ async function queueJob(jobData) {
   const job = await operationsQueue.add(jobData.type, data, {
     jobId,
     priority: jobData.priority || 10,
+    // A delay in ms, or a repeat such as { cron: '0 9 * * *', tz: 'Europe/Berlin' }.
+    ...(jobData.delay > 0 ? { delay: jobData.delay } : {}),
+    ...(jobData.repeat ? { repeat: jobData.repeat } : {}),
   });
 
   console.log(`📨 Job queued: ${job.id} (${jobData.type})`);
   return job;
+}
+
+/**
+ * Stop a repeating job queued with `repeat`, by the id it was queued under.
+ * @param {string} jobId
+ * @returns {Promise<boolean>} whether one was found
+ */
+async function removeRepeatingJob(jobId) {
+  const repeating = await operationsQueue.getRepeatableJobs();
+  const matches = repeating.filter((job) => job.id === jobId);
+  await Promise.all(matches.map((job) => operationsQueue.removeRepeatableByKey(job.key)));
+  return matches.length > 0;
 }
 
 /**
@@ -222,8 +237,11 @@ function cleanupCancelledJobs() {
 // ── Processors ─────────────────────────────────────────────────────────────
 // One registration per type in api/services/processors/*.processors.js.
 
+/** Whether a job's lifecycle is worth a log line (frequent internal ticks are not). */
+const loud = (job) => !processors.get(job.name)?.quiet;
+
 async function runProcessor(job, def) {
-  console.log(`🔄 Processing job ${job.id}: ${job.name}`);
+  if (!def.quiet) console.log(`🔄 Processing job ${job.id}: ${job.name}`);
   const ctx = createJobContext(job, { isCancelled: isJobCancelled });
   try {
     return await def.run(ctx);
@@ -267,24 +285,12 @@ operationsQueue.process('*', WORKER_CONCURRENCY, (job) => {
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 
-/** Config keys that can carry a caller's X session. */
-const SESSION_KEYS = ['sessionCookie', 'session', 'authToken', 'cookie'];
-
 /** A job config without the session it carried. */
 function redactSession(config) {
   if (!config || typeof config !== 'object') return config ?? null;
   const copy = { ...config };
   for (const key of SESSION_KEYS) delete copy[key];
   return copy;
-}
-
-/**
- * A stable, non-reversible tag for the session a job ran as, so an agent can
- * list its own operations and nobody else's.
- */
-function sessionHashOf(config) {
-  const value = SESSION_KEYS.map((key) => config?.[key]).find((v) => typeof v === 'string' && v.trim());
-  return value ? crypto.createHash('sha256').update(value.trim()).digest('hex').slice(0, 32) : null;
 }
 
 const BULL_STATUS = {
@@ -386,7 +392,7 @@ async function updateOperation(job, data) {
 }
 
 operationsQueue.on('active', async (job) => {
-  console.log(`▶️  Job active: ${job.id} (${job.data.type || job.name})`);
+  if (loud(job)) console.log(`▶️  Job active: ${job.id} (${job.data.type || job.name})`);
   await updateOperation(job, { status: 'processing', startedAt: new Date() });
   global.io?.to(`job:${roomOf(job)}`).emit('job:active', {
     jobId: roomOf(job),
@@ -403,7 +409,7 @@ operationsQueue.on('progress', (job, progress) => {
 });
 
 operationsQueue.on('completed', async (job, result) => {
-  console.log(`✅ Job completed: ${job.id}`);
+  if (loud(job)) console.log(`✅ Job completed: ${job.id}`);
   await updateOperation(job, { status: 'completed', completedAt: new Date(), result: serializeResult(result) });
   await forgetSession(job, true);
 
@@ -496,6 +502,8 @@ export {
   getJob as getJobStatus,
   getHistory,
   getRecentJobs,
+  sessionHashOf,
+  removeRepeatingJob,
   cancelJob,
   isJobCancelled,
   operationsQueue,

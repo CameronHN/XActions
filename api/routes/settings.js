@@ -130,35 +130,8 @@ router.get('/muted', async (req, res) => {
   }
 });
 
-// Request data download
-router.post('/download-data', async (req, res) => {
-  try {
-    if (!req.user.twitterAccessToken && !req.user.sessionCookie) {
-      return res.status(400).json({ error: 'Twitter account not connected' });
-    }
-
-    const operation = await prisma.operation.create({
-      data: {
-        userId: req.user.id,
-        type: 'requestDataDownload',
-        status: 'pending',
-        config: JSON.stringify({}),
-      },
-    });
-
-    await queueJob({
-      type: 'requestDataDownload',
-      operationId: operation.id,
-      userId: req.user.id,
-      authMethod: req.user.authMethod || 'oauth',
-      config: {},
-    });
-
-    res.json({ operationId: operation.id, status: 'queued', message: 'Data download request queued' });
-  } catch (error) {
-    console.error('❌ Data download error:', error);
-    res.status(500).json({ error: 'Failed to request data download' });
-  }
-});
+// No data-download route: X asks for the account password and a code it
+// sends by email or SMS before it builds an archive, so a session cannot
+// request one.
 
 export default router;

@@ -14,6 +14,8 @@
  * @license Apache-2.0
  */
 
+import { createHash } from 'node:crypto';
+
 /** A problem with the job's input. Retrying cannot fix it. */
 export class JobInputError extends Error {
   constructor(message) {
@@ -33,7 +35,32 @@ export class JobCancelledError extends Error {
 }
 
 /** Config keys routes use for a caller-supplied session. */
-const SESSION_KEYS = ['sessionCookie', 'session', 'authToken', 'cookie'];
+export const SESSION_KEYS = ['sessionCookie', 'session', 'authToken', 'cookie'];
+
+/**
+ * A stable, non-reversible tag for the session in a job config, so an agent
+ * can find its own operations and stored state and nobody else's. The queue
+ * stamps it on every job as `sessionHash`.
+ *
+ * @param {object} config
+ * @returns {string|null}
+ */
+export function sessionHashOf(config) {
+  const value = SESSION_KEYS.map((key) => config?.[key]).find((v) => typeof v === 'string' && v.trim());
+  return value ? createHash('sha256').update(value.trim()).digest('hex').slice(0, 32) : null;
+}
+
+/**
+ * The ownerKey a job queued with this cookie runs under, for routes that read
+ * what such a job stored.
+ *
+ * @param {string} cookie
+ * @returns {string|null}
+ */
+export function ownerKeyForSession(cookie) {
+  const hash = sessionHashOf({ sessionCookie: cookie });
+  return hash ? `session:${hash}` : null;
+}
 
 /**
  * The session a job should act as, before any network call.
