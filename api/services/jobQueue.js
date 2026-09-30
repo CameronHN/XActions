@@ -121,7 +121,7 @@ async function getJob(jobId) {
     status: state || operation.status,
     progress,
     config: operation.config,
-    result: operation.result,
+    result: parseResult(operation.result),
     error: operation.error,
     createdAt: operation.createdAt,
     startedAt: operation.startedAt,
@@ -349,7 +349,37 @@ operationsQueue.process('datasetFetch', 2, async (job) => {
   return data;
 });
 
+// Process jobs - getConversations (GET /api/messages/conversations)
+operationsQueue.process('getConversations', 3, async (job) => {
+  console.log(`🔄 Processing job ${job.id}: getConversations`);
+  const { clientForUser, listDmConversations, XSessionError } = await import('./xSession.js');
+  try {
+    const scraper = await clientForUser(job.data.userId);
+    const conversations = await listDmConversations(scraper, job.data.config?.limit || 20);
+    return { success: true, count: conversations.length, conversations };
+  } catch (err) {
+    // A missing or revoked session fails the same way on every retry.
+    if (err instanceof XSessionError) await job.discard();
+    throw err;
+  }
+});
+
 // ── Helpers ────────────────────────────────────────────────────────────────
+
+/** Operation.result is a TEXT column; processors return objects. */
+function serializeResult(result) {
+  if (result === undefined || result === null) return null;
+  return typeof result === 'string' ? result : JSON.stringify(result);
+}
+
+function parseResult(stored) {
+  if (typeof stored !== 'string') return stored ?? null;
+  try {
+    return JSON.parse(stored);
+  } catch {
+    return stored;
+  }
+}
 
 /** Fire a best-effort POST to a callbackUrl with the job result */
 function deliverCallback(url, payload) {
@@ -393,7 +423,7 @@ operationsQueue.on('completed', async (job, result) => {
 
   await prisma.operation.update({
     where: { id: job.data.operationId },
-    data: { status: 'completed', completedAt: new Date(), result },
+    data: { status: 'completed', completedAt: new Date(), result: serializeResult(result) },
   });
 
   global.io?.to(`job:${job.data.operationId}`).emit('job:completed', {

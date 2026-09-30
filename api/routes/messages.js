@@ -3,6 +3,7 @@ import express from 'express';
 import { PrismaClient } from '@prisma/client';
 import { authMiddleware } from '../middleware/auth.js';
 import { queueJob } from '../services/jobQueue.js';
+import { clientForUser, listDmGroups, XSessionError } from '../services/xSession.js';
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -71,6 +72,22 @@ router.get('/conversations', async (req, res) => {
   } catch (error) {
     console.error('❌ Conversations error:', error);
     res.status(500).json({ error: 'Failed to fetch conversations' });
+  }
+});
+
+// List the group DMs the connected X session belongs to
+router.get('/groups', async (req, res) => {
+  const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 50, 1), 100);
+  try {
+    const scraper = await clientForUser(req.user.id);
+    const groups = await listDmGroups(scraper, limit);
+    res.json({ groups, count: groups.length });
+  } catch (error) {
+    if (error instanceof XSessionError) {
+      return res.status(error.status).json({ error: error.message, code: error.code });
+    }
+    console.error('❌ DM groups error:', error);
+    res.status(502).json({ error: 'Could not read DM groups from X', code: 'X_REQUEST_FAILED' });
   }
 });
 
