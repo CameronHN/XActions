@@ -1395,6 +1395,18 @@ npm run lint          # ESLint over the repo
 npm run docs:check    # dead links, stale counts, invented CLI commands
 ```
 
+### Contributors
+
+Thanks to everyone whose code, bug reports and investigations made XActions
+better, including [@RandyLu87](https://github.com/RandyLu87),
+[@ni3a](https://github.com/ni3a),
+[@nelsongallardo](https://github.com/nelsongallardo),
+[@azeezalhajj570-ai](https://github.com/azeezalhajj570-ai),
+[@stone-w4tch3r](https://github.com/stone-w4tch3r) and
+[@avner-assistant](https://github.com/avner-assistant). The full list, with what
+each person found or built, is in [CONTRIBUTORS.md](CONTRIBUTORS.md). A precise
+bug report earns a place there as surely as a merged PR.
+
 ---
 
 ## ⭐ Star History

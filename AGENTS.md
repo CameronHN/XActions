@@ -412,3 +412,8 @@ Deeper map: [`docs/`](docs/), starting with
 - Third-party code is attributed in
   [`THIRD-PARTY-NOTICES.md`](THIRD-PARTY-NOTICES.md) before it is merged. Read
   the licence table there before adapting anything from another project.
+- People are credited where readers see it. When a fix comes from someone's
+  issue or PR, add them to [`CONTRIBUTORS.md`](CONTRIBUTORS.md) in the same
+  change, name them in the CHANGELOG entry, and add a `Reported-by:` (or
+  `Co-authored-by:` for their code) trailer to the commit. The rules are in
+  [CONTRIBUTING.md](CONTRIBUTING.md#credit).

@@ -140,6 +140,22 @@ When filing an issue, please include:
 - **Screenshots** if applicable
 - **Environment** (browser, Node version, etc.)
 
+## Credit
+
+Everyone whose work changes XActions is credited in
+[CONTRIBUTORS.md](CONTRIBUTORS.md), not only in git history:
+
+- **Merged code** is credited to its author, including when a maintainer
+  rebases or re-lands it in another PR.
+- **A valid bug report** (one that reproduces and leads to a fix) is credited
+  to the reporter, with a link to the issue. The fixing commit carries a
+  `Reported-by:` trailer and its CHANGELOG entry names you.
+- **A closed PR whose finding was right** is credited too, when the fix reached
+  `main` another way.
+
+Questions, feature ideas that are not built, and reports that do not reproduce
+are welcome but are not listed. If you think you were missed, open an issue.
+
 ## 💬 Questions?
 
 - Open a [GitHub Issue](https://github.com/nirholas/xactions/issues)
